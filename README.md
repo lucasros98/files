@@ -1,3 +1,3 @@
 # Files for NER Project
 
-This repo contains the translated file for our Named Entity Recognition Project.
+This repo contains the translated files for our Named Entity Recognition Project.
