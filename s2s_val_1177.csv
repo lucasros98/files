@@ -26,7 +26,7 @@
 24,"['At', 'migraine', 'you', 'can', 'also', 'take', 'cox inhibitor', 'for', 'example', 'naproxen', 'or', 'diclofenac', 'at', 'the', 'first', 'sign', 'of', 'migraine attack']","['O', 'B-disorder', 'O', 'O', 'O', 'O', 'B-drug', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-disorder']"
 25,"['If', 'children', 'have', 'problems', 'there', 'is', 'over-the-counter', 'allergy', 'medicine']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']"
 26,"['Haemophilus', 'influenzae', 'is', 'a', 'common', 'bacterium', 'that', 'often', 'causes', 'otitis', 'and', 'pneumonia']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-disorder', 'O', 'B-disorder']"
-27,"['After', 'a', 'few', 'years', 'you', 'often', 'can&#39;t', 'manage', 'on', 'your', 'own', 'but', 'need', 'help', 'with', 'everyday', 'chores', 'and', 'planning', 'the', 'day']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']"
+27,"['After', 'a', 'few', 'years', 'you', 'often', 'cant', 'manage', 'on', 'your', 'own', 'but', 'need', 'help', 'with', 'everyday', 'chores', 'and', 'planning', 'the', 'day']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']"
 28,"['The', 'stool', 'may', 'become', 'loose', 'and', 'you', 'may', 'feel', 'nauseous']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']"
 29,"['It', 'can', 'be', 'difficult', 'to', 'eat', 'as', 'much', 'as', 'before', 'without', 'gaining', 'weight']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']"
 30,"['You', 'can', 'ask', 'at', 'a', 'pharmacy', 'if', 'you', 'are', 'not', 'sure', 'what', 'suits', 'you', 'best']","['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']"
