@@ -1,15 +1,11 @@
 import random
 from collections import defaultdict, Counter    
-import gensim
-from gensim.models import KeyedVectors
-import gensim.downloader
 import sys
 import time
 from torch.utils.data import Dataset, DataLoader
 import torch
 from torch import nn
-from sklearn.model_selection import train_test_split
-
+#from sklearn.model_selection import train_test_split
 
 PAD = '___PAD___'
 UNKNOWN = '___UNKNOWN___'
@@ -20,46 +16,21 @@ class Vocabulary:
     """Manages the numerical encoding of the vocabulary."""
     
     def __init__(self, max_voc_size=None, include_unknown=True, lower=False,
-                 character=False, gensim_model=None):
+                 character=False):
 
         self.include_unknown = include_unknown
         self.dummies = [PAD, UNKNOWN, BOS, EOS] if self.include_unknown else [PAD, BOS, EOS]
         
         self.character = character
         
-        if not gensim_model:
-            # String-to-integer mapping
-            self.stoi = None
-            # Integer-to-string mapping
-            self.itos = None
-            # Maximally allowed vocabulary size.
-            self.max_voc_size = max_voc_size
-            self.lower = lower
-            self.vectors = None
-        else:
-            self.vectors = gensim_model[0]
-            self.itos = self.dummies + gensim_model[1]
-            self.stoi = {s:i for i, s in enumerate(self.itos)}
-            self.lower = not gensim_model[2]
-            
-    def make_embedding_layer(self, finetune=True, emb_dim=None):
-        if self.vectors is not None:
-            emb_dim = self.vectors.shape[1]
-            emb_layer = nn.Embedding(len(self.itos), emb_dim, sparse=False)
-
-            with torch.no_grad():
-                # Copy the pre-trained embedding weights into our embedding layer.
-                emb_layer.weight[len(self.dummies):, :] = self.vectors
-
-            #print(f'Emb shape: {emb_layer.weight.shape}, voc size: {len(self.itos)}')
-        else:
-            emb_layer = nn.Embedding(len(self.itos), emb_dim, sparse=False)
-        
-        if not finetune:
-            # If we don't fine-tune, create a tensor where we don't compute the gradients.
-            emb_layer.weight = nn.Parameter(emb_layer.weight, requires_grad=False)
-        
-        return emb_layer
+        # String-to-integer mapping
+        self.stoi = None
+        # Integer-to-string mapping
+        self.itos = None
+        # Maximally allowed vocabulary size.
+        self.max_voc_size = max_voc_size
+        self.lower = lower
+        self.vectors = None
         
     def build(self, seqs):
         """Builds the vocabulary."""
@@ -111,8 +82,8 @@ class Vocabulary:
     def __len__(self):
         return len(self.itos)
     
-    
 
+    
 class SequenceDataset(Dataset):
     """A Dataset that stores a list of sentences and their corresponding labels."""
     def __init__(self, Xwords, Y, Xchars=None, word_dropout_prob=None, word_dropout_id=None):
@@ -419,8 +390,6 @@ class SequenceLabeler:
         self.model.to(p.device)
         optimizer = torch.optim.Adam(self.model.parameters(), 
                                      lr=p.learning_rate, weight_decay=p.weight_decay)
-        #optimizer = torch.optim.SparseAdam(self.model.parameters(), 
-        #                                   lr=p.learning_rate)
 
         # Cross-entropy loss function that we will use to optimize the model.
         # In particular, note that by using ignore_index, we will not compute the loss 
