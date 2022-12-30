@@ -10,25 +10,6 @@ import torch
 from torch import nn
 from sklearn.model_selection import train_test_split
 
-def read_data(corpus_file):
-    with open(corpus_file, encoding='utf-8') as f:
-        X = []
-        Y = []
-        words = []
-        labels = []
-        for line in f:
-            line = line.strip()
-            if not line:
-                X.append(words)
-                Y.append(labels)
-                words = []
-                labels = []
-            else:
-                columns = line.split()
-                words.append(columns[0])
-                labels.append(columns[-1])
-        return X, Y
-    
 
 PAD = '___PAD___'
 UNKNOWN = '___UNKNOWN___'
@@ -193,39 +174,6 @@ class SequenceBatcher:
             Xcpadded = torch.as_tensor(Xcpadded, device=self.device)            
             return Xpadded, Xcpadded, Ypadded
        
-        
-
-
-def load_gensim_vectors(model_file, builtin=False, limit=None):
-    using_new_gensim = gensim.__version__[0] == '4'
-
-    print(f"Loading model '{model_file}' via gensim...", end='')
-    sys.stdout.flush()
-    if builtin:
-        gensim_model = gensim.downloader.load(model_file)
-    else:
-        gensim_model = KeyedVectors.load_word2vec_format(model_file, binary=True, limit=limit)
-    if not limit:
-        if using_new_gensim:
-            limit = len(gensim_model.index_to_key)
-        else:
-            limit = len(gensim_model.index2word)
-    vectors = torch.FloatTensor(gensim_model.vectors[:limit])
-    
-    if using_new_gensim:
-        voc = gensim_model.index_to_key[:limit]
-    else:
-        voc = gensim_model.index2word[:limit]
-    
-    is_cased = False
-    for w in voc:
-        w0 = w[0]
-        if w0.isupper():
-            is_cased = True
-            break
-    
-    print(' done!')
-    return vectors, voc, is_cased
 
 
 # Aligns encoded output BIO labels with the word pieces created
@@ -368,8 +316,9 @@ def show_entities(tagger, sentences):
         'ORG': 'background-color: #ff8800; color: black;',
         'MISC': 'background-color: #00ffff; color: black;',
 
-        'Disease': 'background-color: #ff3333; color: white;',
-        'Chemical': 'background-color: #44bbff; color: white;'
+        'disease': 'background-color: #ff3333; color: white;',
+        'drug': 'background-color: #44bbff; color: white;',
+        'bodypart': 'background-color: #308227; color: white;'
     }
     content = ['<div style="font-size:150%; line-height: 150%;">']
 
@@ -432,38 +381,16 @@ class SequenceLabeler:
         self.n_labels = len(self.label_voc)
         train_lbl_encoded = self.label_voc.encode(Ytrain)
         val_lbl_encoded = self.label_voc.encode(Yval)
-        
-        if not self.bert_tokenizer:
-            # If we are using a pre-trained word embedding model, then we use its built-in vocabulary;
-            # otherwise, we build the word vocabulary from the data.
-
-            self.word_voc = Vocabulary(include_unknown=True, gensim_model=self.pretrained_word_emb)
-            if not self.pretrained_word_emb:
-                self.word_voc.build(Xtrain)            
-
-            train_word_encoded = self.word_voc.encode(Xtrain)
-            val_word_encoded = self.word_voc.encode(Xval)
-            
-            if p.use_characters:
-                self.char_voc = Vocabulary(include_unknown=True, character=True)            
-                self.char_voc.build(Xtrain)
-                train_char_encoded = self.char_voc.encode(Xtrain)
-                val_char_encoded = self.char_voc.encode(Xval)
-            else:                
-                self.char_voc = None
-                train_char_encoded = None
-                val_char_encoded = None
-            dropout_id = self.word_voc.get_unknown_idx()
-        else:
-            train_tokenized = self.bert_tokenizer(Xtrain, is_split_into_words=True, truncation=True, max_length=p.bert_max_len)
-            val_tokenized = self.bert_tokenizer(Xval, is_split_into_words=True, truncation=True, max_length=p.bert_max_len)
-            train_lbl_encoded = remap_entity_indices(train_tokenized, train_lbl_encoded, self.label_voc)
-            val_lbl_encoded = remap_entity_indices(val_tokenized, val_lbl_encoded, self.label_voc)
-            train_word_encoded = train_tokenized.input_ids
-            val_word_encoded = val_tokenized.input_ids
-            train_char_encoded = None
-            val_char_encoded = None
-            dropout_id = self.bert_tokenizer.unk_token_id
+ 
+        train_tokenized = self.bert_tokenizer(Xtrain, is_split_into_words=True, truncation=True, max_length=p.bert_max_len)
+        val_tokenized = self.bert_tokenizer(Xval, is_split_into_words=True, truncation=True, max_length=p.bert_max_len)
+        train_lbl_encoded = remap_entity_indices(train_tokenized, train_lbl_encoded, self.label_voc)
+        val_lbl_encoded = remap_entity_indices(val_tokenized, val_lbl_encoded, self.label_voc)
+        train_word_encoded = train_tokenized.input_ids
+        val_word_encoded = val_tokenized.input_ids
+        train_char_encoded = None
+        val_char_encoded = None
+        dropout_id = self.bert_tokenizer.unk_token_id
 
         # Put the training and validation data into Datasets and DataLoaders for managing minibatches.
         self.batcher = SequenceBatcher(p.device)        
@@ -591,17 +518,10 @@ class SequenceLabeler:
         
     def predict(self, sentences):
         # This method applies the trained model to a list of sentences.
-                    
-        if not self.bert_tokenizer:
-            word_encoded = self.word_voc.encode(sentences)            
-            if self.params.use_characters:
-                char_encoded = self.char_voc.encode(sentences)
-            else:                
-                char_encoded = None
-        else:
-            word_encoded = self.bert_tokenizer(sentences, is_split_into_words=True, truncation=True, 
+        
+        word_encoded = self.bert_tokenizer(sentences, is_split_into_words=True, truncation=True, 
                                                max_length=self.params.bert_max_len).input_ids
-            char_encoded = None
+        char_encoded = None
             
         Ydummy = [[0]*len(x) for x in word_encoded]
                 
