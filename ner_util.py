@@ -316,7 +316,7 @@ def show_entities(tagger, sentences):
         'ORG': 'background-color: #ff8800; color: black;',
         'MISC': 'background-color: #00ffff; color: black;',
 
-        'disease': 'background-color: #ff3333; color: white;',
+        'disorder': 'background-color: #ff3333; color: white;',
         'drug': 'background-color: #44bbff; color: white;',
         'bodypart': 'background-color: #308227; color: white;'
     }
