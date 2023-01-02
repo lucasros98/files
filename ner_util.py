@@ -397,7 +397,8 @@ class SequenceLabeler:
         loss_func = torch.nn.CrossEntropyLoss(ignore_index=self.label_voc.get_pad_idx())
         
         self.history = defaultdict(list)
-        best_f1 = -1        
+        best_f1 = -1  
+        best_scores = None      
             
         for i in range(p.n_epochs):
 
@@ -467,6 +468,7 @@ class SequenceLabeler:
             self.history['val_f1'].append(val_f1)
             if val_f1 > best_f1:
                 best_f1 = val_f1
+                best_scores = stats
 
             t1 = time.time()
             print(f'Epoch {i+1}: train loss = {train_loss:.4f}, val f1: {val_f1:.4f}, time = {t1-t0:.4f}')
@@ -481,6 +483,9 @@ class SequenceLabeler:
             if label != 'total':
                 p, r, f1 = prf(stats[label])
                 print(f'{label:4s}: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
+
+        p, r, f1 = prf(best_scores['total'])
+        print(f'Best Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
         
         self.stats = stats
         return best_f1
